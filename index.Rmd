@@ -1,0 +1,66 @@
+
+# open the file from github
+  linkGit="https://github.com/fundamentalsdevin/hw1/raw/refs/heads/main/FSI-2023-DOWNLOAD.xlsx"
+# install and load rio 
+    library(rio)
+  #import the data as fragility23
+fragility23=rio::import(file = linkGit)
+# find out the column names
+names(x = fragility23)
+# find out the data types
+str(object = fragility23)
+# show the first 10 rows and the last 10 rows
+head(x = fragility23, 10)
+tail(fragility23, 10)
+# keep some columns: country total, S1 demographic pressure, P1 State legitimacy, E2 economic inequality
+fragility23[,c(5,11,9)]
+
+grep(pattern = "Country|S1|P1|E2|Total", names(fragility23), fixed = F, value = T)
+
+keep=grep("Country|S1|P1|E2|Total", names(fragility23), fixed = F, value = T)
+frag23_sub=fragility23[,keep]
+
+#rename frag23_sub columsn
+names(frag23_sub)[3:5]=c("S1", "E2", "P1")
+
+# get the top 10 best countries on the column 'E2' 
+tail(frag23_sub[order(x=-frag23_sub$E2),],10)
+
+# statistical descriptions of the data
+summary(object = frag23_sub)
+
+# get the value of the worst quartile of the Total
+q3_Total=quantile(x = frag23_sub$Total,
+                  probs = 0.75,
+                  na.rm = TRUE)
+# correlations between "S1", "E2", and "P1"
+library(corrtable)
+corrtable::correlation_matrix(df = frag23_sub[,-c(1,2)])
+
+# regress P1 and E2 on S1
+lm(S1~P1+E2, data=frag23_sub)
+model <- lm(S1 ~ P1 +E2, data = frag23_sub)
+summary(model)
+
+# give me a plot for P1
+hist(x = frag23_sub$P1)
+
+# a visual correlation between S1 and E2
+plot(x=frag23_sub$S1, y=frag23_sub$E2)
+
+# color the points if the country is in the worst quartile
+frag23_sub$Total>=q3_Total
+frag23_sub$worstQt=frag23_sub$Total>=q3_Total
+plot(frag23_sub$S1,
+     frag23_sub$E2, pch=20,
+     col = as.factor(frag23_sub$worstQt))
+
+# a visual regression of P1 and E2
+library(sjPlot)
+plot_models(model)
+
+
+
+
+
+
